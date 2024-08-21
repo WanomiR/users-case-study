@@ -6,7 +6,7 @@ build:
 	@docker compose up --build --force-recreate
 
 swagger_generate:
-	@cd userservice && swag init -g ./cmd/api/main.go && cd ..
+	@cd userservice && swag init --parseDependency -g ./cmd/api/main.go && cd ..
 
 migration_create:
 	@migrate create -ext sql -dir postgres/migration/ -seq init_mg

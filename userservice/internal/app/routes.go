@@ -35,8 +35,13 @@ func (a *App) routes() *chi.Mux {
 			})
 		})
 
-		r.Route("/debug/pprof/", func(r chi.Router) {
+		r.Route("/users", func(r chi.Router) {
+			r.Get("/", a.controller.GetUsers)
+			r.Get("/{email}", a.controller.GetUser)
+			r.Post("/", a.controller.CreateUser)
+		})
 
+		r.Route("/debug/pprof/", func(r chi.Router) {
 			r.Get("/", pprof.Index)
 			r.Get("/{cmd}", pprof.Index)
 			r.Get("/cmdline", pprof.Cmdline)

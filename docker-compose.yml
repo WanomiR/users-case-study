@@ -29,8 +29,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - '5432:5432' # remove before deployment to prod
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
       - ./postgres/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
@@ -59,3 +57,6 @@ services:
     depends_on:
       - prometheus
     restart: always
+
+volumes:
+  grafana:

@@ -13,6 +13,11 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	v1 "userservice/internal/controller/http/v1"
+	"userservice/internal/infrastructure/repository"
+	"userservice/internal/infrastructure/repository/dbrepo"
+	"userservice/internal/service"
+
 	// include to use db drivers
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v5"
@@ -36,7 +41,8 @@ type App struct {
 	config     Config
 	server     *http.Server
 	signalChan chan os.Signal
-	//DB          repository.Repository
+	DB         repository.Repository
+	controller *v1.Controller
 }
 
 func NewApp() (a *App, err error) {
@@ -52,7 +58,7 @@ func NewApp() (a *App, err error) {
 }
 
 func (a *App) Start() {
-	//defer a.DB.Connection().Close()
+	defer a.DB.Connection().Close()
 
 	fmt.Println("Started server on port", a.config.port)
 	if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -100,10 +106,15 @@ func (a *App) init() error {
 		return err
 	}
 
-	_, err := a.connectToDB()
+	conn, err := a.connectToDB()
 	if err != nil {
 		return err
 	}
+
+	a.DB = dbrepo.NewPostgresDBRepo(conn)
+
+	userService := service.NewUserService(a.DB)
+	a.controller = v1.NewController(userService)
 
 	a.server = &http.Server{
 		Addr:         ":" + a.config.port,

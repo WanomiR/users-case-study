@@ -8,8 +8,9 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/prometheus/client_golang v1.20.1
 	github.com/swaggo/http-swagger v1.3.4
+	github.com/swaggo/swag v1.16.3
 	github.com/wanomir/e v1.0.0
-	github.com/wanomir/rr v1.0.1
+	github.com/wanomir/rr v1.0.5
 )
 
 require (
@@ -34,7 +35,6 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
-	github.com/swaggo/swag v1.16.3 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect

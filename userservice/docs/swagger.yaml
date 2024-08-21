@@ -1,9 +1,116 @@
 basePath: /
+definitions:
+  rr.JSONResponse:
+    properties:
+      data: {}
+      error:
+        type: boolean
+      message:
+        type: string
+    type: object
+  userservice_internal_entity.User:
+    properties:
+      age:
+        example: 30
+        type: integer
+      email:
+        example: user@example.com
+        type: string
+      id:
+        type: integer
+      name:
+        example: user
+        type: string
+      password:
+        example: "123456"
+        type: string
+    type: object
 host: localhost:8888
 info:
   contact: {}
   description: Geoservice API
   title: UserService
   version: 1.0.0
-paths: {}
+paths:
+  /users:
+    get:
+      parameters:
+      - description: offset
+        in: query
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+      summary: Returns a list of users provided offset and limit
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/userservice_internal_entity.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+      summary: Creates a new user provided user object
+      tags:
+      - users
+  /users/{email}:
+    get:
+      parameters:
+      - description: email
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rr.JSONResponse'
+      summary: Returns user object provided user email
+      tags:
+      - users
 swagger: "2.0"

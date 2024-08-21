@@ -17,7 +17,7 @@ services:
       POSTGRES_PORT: ${DB_PORT}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_NAME: ${DB_NAME}
+      POSTGRES_DB_NAME: ${DB_NAME}
 
   redis:
     image: redis:latest
@@ -29,8 +29,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - '5432:5432' # remove before deployment to prod
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
       - ./postgres/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
@@ -54,8 +52,7 @@ services:
     volumes:
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ./grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
-      - ./grafana/dashboards:/etc/dashboards
-      - ./grafana:/var/lib/grafana
+      - ./grafana/dashboard.json:/etc/dashboards/dashboard.json
     depends_on:
       - prometheus
     restart: always

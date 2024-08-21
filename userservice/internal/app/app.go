@@ -5,31 +5,50 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/wanomir/e"
-	_ "github.com/wanomir/rr"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+	v1 "userservice/internal/controller/http/v1"
+	"userservice/internal/infrastructure/repository"
+	"userservice/internal/infrastructure/repository/dbrepo"
+	"userservice/internal/service"
+
 	// include to use db drivers
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+var appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Namespace: "userservice",
+	Name:      "info",
+	Help:      "App environment info",
+}, []string{"version"})
+
+func init() {
+	prometheus.MustRegister(appInfo)
+}
+
 type Config struct {
-	host string
-	port string
-	dsn  string
+	host       string
+	port       string
+	dsn        string
+	redisHost  string
+	redisPort  string
+	appVersion string
 }
 
 type App struct {
 	config     Config
 	server     *http.Server
 	signalChan chan os.Signal
-	//DB          repository.Repository
+	DB         repository.Repository
+	controller *v1.Controller
 }
 
 func NewApp() (a *App, err error) {
@@ -45,7 +64,7 @@ func NewApp() (a *App, err error) {
 }
 
 func (a *App) Start() {
-	//defer a.DB.Connection().Close()
+	defer a.DB.Connection().Close()
 
 	fmt.Println("Started server on port", a.config.port)
 	if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -65,6 +84,39 @@ func (a *App) Shutdown() {
 	fmt.Println("Shutting down server gracefully")
 }
 
+func (a *App) init() error {
+	if err := a.readConfig(); err != nil {
+		return err
+	}
+
+	conn, err := a.connectToDB()
+	if err != nil {
+		return err
+	}
+
+	a.DB = dbrepo.NewPostgresDBRepo(conn)
+
+	userServiceCacheProxy := service.NewUserServiceCacheProxy(
+		service.NewUserService(a.DB),
+		fmt.Sprintf("%s:%s", a.config.redisHost, a.config.redisPort),
+	)
+	a.controller = v1.NewController(userServiceCacheProxy)
+
+	a.server = &http.Server{
+		Addr:         ":" + a.config.port,
+		Handler:      a.routes(),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+	}
+
+	a.signalChan = make(chan os.Signal, 1)
+	signal.Notify(a.signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	appInfo.With(prometheus.Labels{"version": a.config.appVersion}).Set(1)
+
+	return nil
+}
+
 func (a *App) readConfig() (err error) {
 
 	a.config.host = os.Getenv("HOST")
@@ -76,35 +128,17 @@ func (a *App) readConfig() (err error) {
 		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB"),
+		os.Getenv("POSTGRES_DB_NAME"),
 	)
 
-	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" {
+	a.config.redisHost = os.Getenv("REDIS_HOST")
+	a.config.redisPort = os.Getenv("REDIS_PORT")
+
+	a.config.appVersion = os.Getenv("APP_VERSION")
+
+	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" || a.config.appVersion == "" {
 		return errors.New("env variables not set")
 	}
-
-	return nil
-}
-
-func (a *App) init() error {
-	if err := a.readConfig(); err != nil {
-		return err
-	}
-
-	//conn, err := a.connectToDB()
-	//if err != nil {
-	//	return err
-	//}
-
-	a.server = &http.Server{
-		Addr:         ":" + a.config.port,
-		Handler:      a.routes(),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
-	}
-
-	a.signalChan = make(chan os.Signal, 1)
-	signal.Notify(a.signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	return nil
 }

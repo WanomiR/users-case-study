@@ -53,10 +53,6 @@ services:
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ./grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
       - ./grafana/dashboard.json:/etc/dashboards/dashboard.json
-      - ./grafana:/var/lib/grafana
     depends_on:
       - prometheus
     restart: always
-
-volumes:
-  grafana:

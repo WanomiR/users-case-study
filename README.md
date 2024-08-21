@@ -11,6 +11,10 @@ Simple REST API with Postgres and Redis.
     make build
     ```
 - Use other make commands to conduct database operations.
+- Pre-existing users (for tests):
+  - `admin@example.com password`
+  -	`john.doe@gmail.com password`
+  -	`jen.star@gmail.com password`
 
 
 > [!note]  

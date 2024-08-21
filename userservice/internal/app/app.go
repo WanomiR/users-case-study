@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/wanomir/e"
-	_ "github.com/wanomir/rr"
 	"log"
 	"net/http"
 	"os"
@@ -19,10 +19,17 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+var appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Namespace: "geoservice",
+	Name:      "info",
+	Help:      "App environment info",
+}, []string{"version"})
+
 type Config struct {
-	host string
-	port string
-	dsn  string
+	host       string
+	port       string
+	dsn        string
+	appVersion string
 }
 
 type App struct {
@@ -76,10 +83,12 @@ func (a *App) readConfig() (err error) {
 		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB"),
+		os.Getenv("POSTGRES_DB_NAME"),
 	)
 
-	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" {
+	a.config.appVersion = os.Getenv("APP_VERSION")
+
+	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" || a.config.appVersion == "" {
 		return errors.New("env variables not set")
 	}
 
@@ -91,10 +100,10 @@ func (a *App) init() error {
 		return err
 	}
 
-	//conn, err := a.connectToDB()
-	//if err != nil {
-	//	return err
-	//}
+	_, err := a.connectToDB()
+	if err != nil {
+		return err
+	}
 
 	a.server = &http.Server{
 		Addr:         ":" + a.config.port,
@@ -105,6 +114,8 @@ func (a *App) init() error {
 
 	a.signalChan = make(chan os.Signal, 1)
 	signal.Notify(a.signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	appInfo.With(prometheus.Labels{"version": a.config.appVersion}).Set(1)
 
 	return nil
 }

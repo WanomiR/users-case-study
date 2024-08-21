@@ -17,7 +17,7 @@ services:
       POSTGRES_PORT: ${DB_PORT}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_NAME: ${DB_NAME}
+      POSTGRES_DB_NAME: ${DB_NAME}
 
   redis:
     image: redis:latest

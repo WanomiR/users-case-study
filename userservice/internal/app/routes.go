@@ -7,7 +7,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
-	"github.com/wanomir/rr"
 	"net/http"
 	"net/http/pprof"
 )
@@ -25,8 +24,6 @@ func (a *App) routes() *chi.Mux {
 
 	r.Use(middleware.Recoverer)
 
-	responder := rr.NewReadRespond()
-
 	// group for gathering metrics, doesn't include the `metrics` endpoint
 	r.Group(func(r chi.Router) {
 
@@ -36,10 +33,6 @@ func (a *App) routes() *chi.Mux {
 				next.ServeHTTP(w, r)
 				requestsTotal.With(prometheus.Labels{"type": "requests"}).Inc()
 			})
-		})
-
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			_ = responder.WriteJSON(w, 200, []byte("Hello, World!"))
 		})
 
 		r.Route("/debug/pprof/", func(r chi.Router) {

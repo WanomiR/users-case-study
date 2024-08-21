@@ -1,0 +1,12 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Geoservice API",
+        "title": "UserService",
+        "contact": {},
+        "version": "1.0.0"
+    },
+    "host": "localhost:8888",
+    "basePath": "/",
+    "paths": {}
+}

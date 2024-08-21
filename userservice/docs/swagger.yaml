@@ -1,0 +1,9 @@
+basePath: /
+host: localhost:8888
+info:
+  contact: {}
+  description: Geoservice API
+  title: UserService
+  version: 1.0.0
+paths: {}
+swagger: "2.0"

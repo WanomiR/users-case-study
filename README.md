@@ -1,2 +1,2 @@
-# users-case-study
-Case study project for Kata Academy.
+# Users: case study
+Simple REST API with Postgres and Redis.

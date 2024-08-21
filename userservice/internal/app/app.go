@@ -34,6 +34,8 @@ type Config struct {
 	host       string
 	port       string
 	dsn        string
+	redisHost  string
+	redisPort  string
 	appVersion string
 }
 
@@ -92,6 +94,9 @@ func (a *App) readConfig() (err error) {
 		os.Getenv("POSTGRES_DB_NAME"),
 	)
 
+	a.config.redisHost = os.Getenv("REDIS_HOST")
+	a.config.redisPort = os.Getenv("REDIS_PORT")
+
 	a.config.appVersion = os.Getenv("APP_VERSION")
 
 	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" || a.config.appVersion == "" {
@@ -113,8 +118,11 @@ func (a *App) init() error {
 
 	a.DB = dbrepo.NewPostgresDBRepo(conn)
 
-	userService := service.NewUserService(a.DB)
-	a.controller = v1.NewController(userService)
+	userServiceCacheProxy := service.NewUserServiceCacheProxy(
+		service.NewUserService(a.DB),
+		fmt.Sprintf("%s:%s", a.config.redisHost, a.config.redisPort),
+	)
+	a.controller = v1.NewController(userServiceCacheProxy)
 
 	a.server = &http.Server{
 		Addr:         ":" + a.config.port,

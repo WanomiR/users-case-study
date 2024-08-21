@@ -2,12 +2,12 @@
 .vscode
 .DS_Store
 
+postgres-data
+
 grafana/**/*
-!grafana/dashboards
+!grafana/dashboard.json
 !grafana/dashboard.yml
 !grafana/datasources.yml
-
-postgres-data
 
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore

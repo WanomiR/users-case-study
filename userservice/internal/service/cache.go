@@ -64,7 +64,7 @@ func (p UserServiceCacheProxy) GetUser(ctx context.Context, email string) (user 
 		if err = json.Unmarshal(cachedData, &user); err != nil {
 			return entity.User{}, e.Wrap("error unmarshalling user from cache", err)
 		}
-		log.Println("loaded user from cache")
+		log.Println("loaded user " + email + " from cache")
 		return user, nil
 	}
 
@@ -76,7 +76,7 @@ func (p UserServiceCacheProxy) GetUser(ctx context.Context, email string) (user 
 	if _, err = conn.Do("SETEX", email, 60*15, serialized); err != nil {
 		log.Println("error caching user", err)
 	}
-	log.Println("cached user")
+	log.Println("cached user " + email)
 
 	return user, nil
 }

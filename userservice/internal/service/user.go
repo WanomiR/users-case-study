@@ -44,7 +44,7 @@ func (s *UserService) CreateUser(ctx context.Context, user entity.User) (int, er
 	}
 
 	if _, err := s.DB.GetUserByEmail(ctx, user.Email); err == nil {
-		return 0, e.WrapIfErr("user with this email already exists", err)
+		return 0, errors.New("user with this email already exists")
 	}
 
 	userId, err := s.DB.CreateUser(ctx, user)

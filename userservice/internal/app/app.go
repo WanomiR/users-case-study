@@ -25,10 +25,14 @@ import (
 )
 
 var appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-	Namespace: "geoservice",
+	Namespace: "userservice",
 	Name:      "info",
 	Help:      "App environment info",
 }, []string{"version"})
+
+func init() {
+	prometheus.MustRegister(appInfo)
+}
 
 type Config struct {
 	host       string
@@ -80,32 +84,6 @@ func (a *App) Shutdown() {
 	fmt.Println("Shutting down server gracefully")
 }
 
-func (a *App) readConfig() (err error) {
-
-	a.config.host = os.Getenv("HOST")
-	a.config.port = os.Getenv("PORT")
-
-	a.config.dsn = fmt.Sprintf( // database source name
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable timezone=UTC connect_timeout=5\n",
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB_NAME"),
-	)
-
-	a.config.redisHost = os.Getenv("REDIS_HOST")
-	a.config.redisPort = os.Getenv("REDIS_PORT")
-
-	a.config.appVersion = os.Getenv("APP_VERSION")
-
-	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" || a.config.appVersion == "" {
-		return errors.New("env variables not set")
-	}
-
-	return nil
-}
-
 func (a *App) init() error {
 	if err := a.readConfig(); err != nil {
 		return err
@@ -135,6 +113,32 @@ func (a *App) init() error {
 	signal.Notify(a.signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	appInfo.With(prometheus.Labels{"version": a.config.appVersion}).Set(1)
+
+	return nil
+}
+
+func (a *App) readConfig() (err error) {
+
+	a.config.host = os.Getenv("HOST")
+	a.config.port = os.Getenv("PORT")
+
+	a.config.dsn = fmt.Sprintf( // database source name
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable timezone=UTC connect_timeout=5\n",
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB_NAME"),
+	)
+
+	a.config.redisHost = os.Getenv("REDIS_HOST")
+	a.config.redisPort = os.Getenv("REDIS_PORT")
+
+	a.config.appVersion = os.Getenv("APP_VERSION")
+
+	if a.config.host == "" || a.config.port == "" || a.config.dsn == "" || a.config.appVersion == "" {
+		return errors.New("env variables not set")
+	}
 
 	return nil
 }

@@ -11,14 +11,18 @@ definitions:
   userservice_internal_entity.User:
     properties:
       age:
+        example: 30
         type: integer
       email:
+        example: user@example.com
         type: string
       id:
         type: integer
       name:
+        example: user
         type: string
       password:
+        example: "123456"
         type: string
     type: object
 host: localhost:8888
